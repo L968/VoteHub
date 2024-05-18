@@ -1,0 +1,60 @@
+﻿version: "3.9"
+services:
+  votehub.api:
+    image: ${DOCKER_REGISTRY-}votehub.api
+    container_name: api
+    restart: unless-stopped
+    build:
+        context: .
+        dockerfile: VoteHub/Dockerfile
+    ports:
+      - 7236:8080
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://votehub.dashboard:18889
+    networks:
+      - votehub-network
+
+  votehub.cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    hostname: cassandra
+    ports:
+      - 9042:9042
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    networks:
+      - votehub-network
+    healthcheck:
+        test: ["CMD", "cqlsh", "-u cassandra", "-p cassandra" ,"-e describe keyspaces"]
+        interval: 15s
+        timeout: 10s
+        retries: 10
+
+  votehub.cassandra.seeder:
+    container_name: cassandra-seeder
+    image: cassandra:latest
+    depends_on:
+      votehub.cassandra:
+        condition: service_healthy
+    volumes:
+      - ./init.cql:/init.cql
+    networks:
+      - votehub-network
+    command: /bin/bash -c "echo loading cassandra seeder && cqlsh votehub.cassandra -f /init.cql"
+
+  votehub.dashboard:
+    image: mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest
+    container_name: dashboard
+    environment:
+      - DASHBOARD__OTLP__AUTHMODE=ApiKey
+      - DASHBOARD__OTLP__PRIMARYAPIKEY=TESTKEY
+    ports:
+      - 18888:18888
+    networks:
+      - votehub-network
+
+volumes:
+  cassandra_data:
+
+networks:
+  votehub-network:
