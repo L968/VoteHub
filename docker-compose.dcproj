@@ -5,12 +5,13 @@
     <DockerTargetOS>Linux</DockerTargetOS>
     <DockerPublishLocally>False</DockerPublishLocally>
     <ProjectGuid>58e17ba6-2f00-47aa-ad80-48680f0248c6</ProjectGuid>
-	<DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
-	<DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
-	<DockerServiceName>votehub.api</DockerServiceName>
+    <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
+    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
+    <DockerServiceName>votehub.api</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
     <None Include=".dockerignore" />
     <None Include="docker-compose.yml" />
+    <None Include="init.cql" />
   </ItemGroup>
 </Project>
