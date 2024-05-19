@@ -8,23 +8,27 @@ internal sealed class GetResultsHandler(IMapper mapper) : IRequestHandler<GetRes
 
     public async Task<IEnumerable<GetResultsResponse>> Handle(GetResultsQuery request, CancellationToken cancellationToken)
     {
-        var details = await _mapper.FetchAsync<VotingSessionDetails>("WHERE session_id = ? ALLOW FILTERING", request.SessionId);
-        var detailsList = details.ToList();
+        var votesQuery = @"
+            SELECT participant_id,
+                   COUNT(*) AS votes
+            FROM vote
+            WHERE session_id = ?
+            GROUP BY participant_id
+        ";
 
-        if (detailsList.Count == 0)
+        var votes = await _mapper.FetchAsync<(Guid ParticipantId, int Votes)>(votesQuery, request.SessionId);
+        var votesDictionary = votes.ToDictionary(v => v.ParticipantId, v => v.Votes);
+
+        if (votesDictionary.Count == 0)
             return [];
 
-        var votingSessionCounts = await _mapper.FetchAsync<VotingSessionCount>("WHERE details_id IN ?", detailsList.Select(d => d.DetailsId));
+        var participants = await _mapper.FetchAsync<Participant>("WHERE session_id = ?", request.SessionId);
+        var participantsList = participants.ToList();
 
-        return detailsList.Select(d =>
+        return participantsList.Select(p => new GetResultsResponse
         {
-            var count = votingSessionCounts.FirstOrDefault(c => c.DetailsId == d.DetailsId)?.VoteCount ?? 0;
-
-            return new GetResultsResponse
-            {
-                ParticipantName = d.ParticipantName,
-                Votes = count
-            };
+            ParticipantName = p.Name,
+            Votes = votesDictionary.TryGetValue(p.ParticipantId, out var votes) ? votes : 0
         });
     }
 }

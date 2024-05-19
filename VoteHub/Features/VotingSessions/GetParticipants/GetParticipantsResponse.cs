@@ -2,14 +2,14 @@
 
 public record GetParticipantsResponse
 {
-    public Guid Id { get; set; }
-    public string ParticipantName { get; set; } = "";
+    public Guid ParticipantId { get; set; }
+    public string Name { get; set; } = "";
     public string ImagePath { get; set; } = "";
 
-    public GetParticipantsResponse(Guid id, string participantName, string imagePath)
+    public GetParticipantsResponse(Guid participantId, string name, string imagePath)
     {
-        Id = id;
-        ParticipantName = participantName;
+        ParticipantId = participantId;
+        Name = name;
         ImagePath = imagePath;
     }
 }

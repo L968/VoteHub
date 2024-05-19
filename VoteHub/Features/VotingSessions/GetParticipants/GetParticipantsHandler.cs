@@ -8,12 +8,12 @@ internal sealed class GetParticipantsHandler(IMapper mapper) : IRequestHandler<G
 
     public async Task<IEnumerable<GetParticipantsResponse>> Handle(GetParticipantsQuery request, CancellationToken cancellationToken)
     {
-        var votingSessionDetails = await _mapper.FetchAsync<VotingSessionDetails>("WHERE session_id = ? ALLOW FILTERING", request.SessionId);
+        var participants = await _mapper.FetchAsync<Participant>("WHERE session_id = ?", request.SessionId);
 
-        return votingSessionDetails.Select(d => new GetParticipantsResponse(
-            id: d.DetailsId,
-            participantName: d.ParticipantName,
-            imagePath: d.ParticipantImagePath
+        return participants.Select(p => new GetParticipantsResponse(
+            participantId: p.ParticipantId,
+            name: p.Name,
+            imagePath: p.ImagePath
         ));
     }
 }

@@ -4,7 +4,7 @@ namespace VoteHub.Features.VotingSessions.GetResults;
 
 public class GetResultsEndpoint : ICarterModule
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "regular")]
     private static async Task<IResult> HandleAsync(Guid sessionId, ISender sender)
     {
         return Results.Ok(await sender.Send(new GetResultsQuery(sessionId)));

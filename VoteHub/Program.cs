@@ -32,8 +32,9 @@ builder.Services.AddSingleton<IMapper>(sp =>
     var session = sp.GetRequiredService<Cassandra.ISession>();
 
     var mappingConfiguration = new MappingConfiguration();
-    mappingConfiguration.Define<VotingSessionCountMapping>();
-    mappingConfiguration.Define<VotingSessionDetailsMapping>();
+    mappingConfiguration.Define<VoteMapping>();
+    mappingConfiguration.Define<ParticipantMapping>();
+    mappingConfiguration.Define<VotingSessionMapping>();
 
     return new Mapper(session, mappingConfiguration);
 });

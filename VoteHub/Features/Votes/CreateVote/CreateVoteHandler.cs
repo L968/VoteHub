@@ -9,18 +9,19 @@ internal sealed class CreateVoteHandler(IMapper mapper, ILogger<CreateVoteHandle
 
     public async Task<Result> Handle(CreateVoteCommand request, CancellationToken cancellationToken)
     {
-        VotingSessionDetails votingSessionDetails = await _mapper.SingleOrDefaultAsync<VotingSessionDetails>("WHERE details_id = ?", request.DetailsId);
+        var session = await _mapper.SingleOrDefaultAsync<VotingSession>("WHERE session_id = ?", request.SessionId);
 
-        if (votingSessionDetails.StartTime > DateTime.UtcNow || votingSessionDetails.EndTime < DateTime.UtcNow)
+        if (session.StartTime > DateTime.UtcNow || session.EndTime < DateTime.UtcNow)
         {
             var message = "Voting session is not active";
             _logger.LogWarning(message);
             return Result.Fail(message);
         }
 
-        await _mapper.UpdateAsync<VotingSessionCount>("SET vote_count = vote_count + 1 WHERE details_id = ?", request.DetailsId);
+        var vote = new Vote(request.SessionId, request.ParticipantId, request.UserId);
+        await _mapper.InsertAsync(vote);
 
-        DiagnosticsConfig.VotesCounter.Add(1, new KeyValuePair<string, object?>("voting.participant_name", votingSessionDetails.ParticipantName));
+        DiagnosticsConfig.VotesCounter.Add(1, new KeyValuePair<string, object?>("voting.participant_id", request.ParticipantId));
         _logger.LogInformation("Successfully create {@Vote}", request);
 
         return Result.Ok();
